@@ -1,8 +1,29 @@
-export const TodoFilter = () => (
+import React from 'react';
+
+type Props = {
+  query: string;
+  setQuery: (value: string) => void;
+  filterStatus: 'all' | 'active' | 'completed';
+  setFilterStatus: (value: 'all' | 'active' | 'completed') => void;
+};
+
+export const TodoFilter: React.FC<Props> = ({
+  query,
+  setQuery,
+  filterStatus,
+  setFilterStatus,
+}) => (
   <form className="field has-addons">
+    {/* Select для статусу */}
     <p className="control">
       <span className="select">
-        <select data-cy="statusSelect">
+        <select
+          data-cy="statusSelect"
+          value={filterStatus}
+          onChange={e =>
+            setFilterStatus(e.target.value as 'all' | 'active' | 'completed')
+          }
+        >
           <option value="all">All</option>
           <option value="active">Active</option>
           <option value="completed">Completed</option>
@@ -10,21 +31,31 @@ export const TodoFilter = () => (
       </span>
     </p>
 
+    {/* Input для пошуку */}
     <p className="control is-expanded has-icons-left has-icons-right">
       <input
         data-cy="searchInput"
         type="text"
         className="input"
         placeholder="Search..."
+        value={query}
+        onChange={e => setQuery(e.target.value)}
       />
       <span className="icon is-left">
         <i className="fas fa-magnifying-glass" />
       </span>
 
-      <span className="icon is-right" style={{ pointerEvents: 'all' }}>
-        {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-        <button data-cy="clearSearchButton" type="button" className="delete" />
-      </span>
+      {/* Кнопка x рендериться лише якщо query не пустий */}
+      {query && (
+        <span className="icon is-right" style={{ pointerEvents: 'all' }}>
+          <button
+            data-cy="clearSearchButton"
+            type="button"
+            className="delete"
+            onClick={() => setQuery('')}
+          />
+        </span>
+      )}
     </p>
   </form>
 );
