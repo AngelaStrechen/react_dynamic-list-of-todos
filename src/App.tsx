@@ -13,51 +13,46 @@ import { User } from './types/User';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isTodosLoading, setIsTodosLoading] = useState(false);
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<
     'all' | 'active' | 'completed'
   >('all');
 
-  // ================================
-  // Функції завантаження даних
-  // ================================
-
-  async function loadTodos() {
-    setIsLoading(true);
-    const data = await getTodos();
-
-    setTodos(data);
-    setIsLoading(false);
-  }
-
-  async function loadUser(userId: number) {
-    setIsLoading(true);
-    const data = await getUser(userId);
-
-    setUser(data);
-    setIsLoading(false);
-  }
-
-  // ================================
-  // useEffect для завантаження Todos при старті
-  // ================================
+  // Завантаження todos при старті
   useEffect(() => {
+    const loadTodos = async () => {
+      setIsTodosLoading(true);
+      const data = await getTodos();
+
+      setTodos(data);
+      setIsTodosLoading(false);
+    };
+
     loadTodos();
   }, []);
 
-  // useEffect для завантаження User при виборі Todo
+  // Завантаження user при обраному todo
   useEffect(() => {
-    if (selectedTodo) {
-      loadUser(selectedTodo.userId);
+    if (!selectedTodo) {
+      return;
     }
+
+    const loadUser = async () => {
+      setIsUserLoading(true);
+      const data = await getUser(selectedTodo.userId);
+
+      setUser(data);
+      setIsUserLoading(false);
+    };
+
+    loadUser();
   }, [selectedTodo]);
 
-  // ================================
   // Фільтрація todos
-  // ================================
   const filteredTodos = todos
     .filter(todo => {
       if (filterStatus === 'completed') {
@@ -68,7 +63,7 @@ export const App: React.FC = () => {
         return !todo.completed;
       }
 
-      return true; // all
+      return true;
     })
     .filter(todo => todo.title.toLowerCase().includes(query.toLowerCase()));
 
@@ -79,7 +74,6 @@ export const App: React.FC = () => {
           <div className="box">
             <h1 className="title">Todos:</h1>
 
-            {/* Фільтр */}
             <div className="block">
               <TodoFilter
                 query={query}
@@ -89,24 +83,23 @@ export const App: React.FC = () => {
               />
             </div>
 
-            {/* Loader і список Todos */}
             <div className="block">
-              {isLoading && <Loader />}
+              {isTodosLoading && <Loader />}
               <TodoList
                 todos={filteredTodos}
                 onSelectTodo={setSelectedTodo}
-                selectedTodo={selectedTodo} // щоб показувати eye/eye-slash
+                selectedTodo={selectedTodo}
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Модалка для обраного Todo */}
       {selectedTodo && (
         <TodoModal
           todo={selectedTodo}
           user={user}
+          isLoading={isUserLoading}
           onClose={() => {
             setSelectedTodo(null);
             setUser(null);
